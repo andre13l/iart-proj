@@ -23,22 +23,22 @@ class KlotskiState:
     # Move the empty space in the specified direction
     def move(self, direction, row, col):
         if direction == "up":
-            if row > 0 and self.board[row-1][col] == 0:
+            if row >= 0 and self.board[row][col] == 0:
                 self.board[row][col], self.board[row-1][col] = self.board[row-1][col], self.board[row][col]
                 self.empty = (row-1, col)
                 return True
         elif direction == "down":
-            if row < 3 and self.board[row+1][col] == 0:
+            if row < 4 and self.board[row][col] == 0:
                 self.board[row][col], self.board[row+1][col] = self.board[row+1][col], self.board[row][col]
                 self.empty = (row+1, col)
                 return True
         elif direction == "left":
-            if col > 0 and self.board[row][col-1] == 0:
+            if col >= 0 and self.board[row][col] == 0:
                 self.board[row][col], self.board[row][col-1] = self.board[row][col-1], self.board[row][col]
                 self.empty = (row, col-1)
                 return True
         elif direction == "right":
-            if col < 3 and self.board[row][col+1] == 0:
+            if col < 4 and self.board[row][col] == 0:
                 self.board[row][col], self.board[row][col+1] = self.board[row][col+1], self.board[row][col]
                 self.empty = (row, col+1)
                 return True
@@ -53,45 +53,11 @@ class KlotskiState:
     def is_solved(self):
         return self.board[3][1] == 1 and self.board[3][2] == 1
 
-def get_empty(self, row, col):
-    if self.board[row][col] == 0:
-        return True
-    else:
-        return False
-# Create the game object
-initial_board = [[2, 1, 1, 3],
-                 [2, 1, 1, 3],
-                 [4, 5, 5, 6],
-                 [0, 7, 0, 6]]
-
-game = KlotskiState(initial_board)
-
-# Print the initial board
-game.print_board()
-
-# Play the game
-while not game.is_solved():
-    row=input()
-    col=input()
-    if get_empty(row,col):
-        move = input("Enter move (up/down/left/right): ")
-        if move == "up":
-            if not game.move("up", row, col):
-                print("Invalid move!")
-        elif move == "down":
-            if not game.move("down", row, col):
-                print("Invalid move!")
-        elif move == "left":
-            if not game.move("left", row, col):
-                print("Invalid move!")
-        elif move == "right":
-            if not game.move("right", row, col):
-                print("Invalid move!")
+    def is_empty(self, row, col):
+        if self.board[row][col] == 0:
+            return True
         else:
-            print("Invalid move!")
-        game.print_board()
-
-print("Congratulations, you solved the puzzle!")
+            return False
 
 def a_star_search(start_state, objective_test, successors, heuristic):
     frontier = []
@@ -112,3 +78,42 @@ def a_star_search(start_state, objective_test, successors, heuristic):
                 heapq.heappush(frontier, (new_cost, successor))
                 
     return None
+   
+# Create the game object
+initial_board = [[2, 1, 1, 3],
+                 [2, 1, 1, 3],
+                 [4, 5, 5, 6],
+                 [0, 7, 0, 6]]
+
+game = KlotskiState(initial_board)
+
+# Print the initial board
+game.print_board()
+
+# Play the game
+while not game.is_solved():
+    row=int(input())
+    col=int(input())
+    print("("+ str(row) + ","+ str(col) + ")")
+    if game.is_empty(row,col):
+        move = input("Enter move (up/down/left/right): ")
+        if move == "up":
+            if not game.move("up", row, col):
+                print("Invalid move!")
+        elif move == "down":
+            if not game.move("down", row, col):
+                print("Invalid move!")
+        elif move == "left":
+            if not game.move("left", row, col):
+                print("Invalid move!")
+        elif move == "right":
+            if not game.move("right", row, col):
+                print("Invalid move!")
+        else:
+            print("Invalid move!")
+        game.print_board()
+    else: print("Invalid index!")
+
+print("Congratulations, you solved the puzzle!")
+
+
