@@ -1,8 +1,11 @@
 import heapq
 
 class KlotskiState:
-    def __init__(self, board):
+    def __init__(self, board, move_history=[]):
         self.board = board
+        (self.blank_row, self.blank_col) = self.get_empty()
+        # create an empty array and append move_history
+        self.move_history = [] + move_history + [self.board]
 
     def __eq__(self, other):
         return self.board == other.board
@@ -15,7 +18,22 @@ class KlotskiState:
             for j in range(3):
                 if self.board[i][j] == 0:
                     return (i, j)
-                
+
+    def is_empty(self, row, col):
+        if self.board[row][col] == 0:
+            return True
+        else:
+            return False
+    
+    def is_solved(self):
+        return self.board[3][1] == 1 and self.board[3][2] == 1
+    
+    def print_board(self):
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                print(self.board[i][j], end=" ", flush=True)
+            print(flush=True)
+            
     def manhattan_distance(self, goal_state):
         distance = 0
 
@@ -26,44 +44,64 @@ class KlotskiState:
                     distance += abs(i - row) + abs(j - col)
         return distance
     
-    # Move the empty space in the specified direction
-    def move(self, direction, row, col):
-        if direction == "up":
-            if row > 0 and self.board[row][col] == 0:
-                self.board[row][col], self.board[row-1][col] = self.board[row-1][col], self.board[row][col]
-                self.empty = (row-1, col)
-                return True
-        elif direction == "down":
-            if row < 3 and self.board[row][col] == 0:
-                self.board[row][col], self.board[row+1][col] = self.board[row+1][col], self.board[row][col]
-                self.empty = (row+1, col)
-                return True
-        elif direction == "left":
-            if col > 0 and self.board[row][col] == 0:
-                self.board[row][col], self.board[row][col-1] = self.board[row][col-1], self.board[row][col]
-                self.empty = (row, col-1)
-                return True
-        elif direction == "right":
-            if col < 3 and self.board[row][col] == 0:
-                self.board[row][col], self.board[row][col+1] = self.board[row][col+1], self.board[row][col]
-                self.empty = (row, col+1)
-                return True
-        return False
     
-    def print_board(self):
-        for i in range(len(self.board)):
-            for j in range(len(self.board[0])):
-                print(self.board[i][j], end=" ", flush=True)
-            print(flush=True)
+    # Move the empty space in the specified direction func
+    def move(self, func, row, col):
+        # decorator function to add to history everytime a move is made
+        # functions with @move will apply this decorator
+        def wrapper(self):
+            state = KlotskiState(self.board, self.move_history)
+            value = func(state, row, col)
+            if value:
+                return state
+            else:
+                return None
             
-    def is_solved(self):
-        return self.board[3][1] == 1 and self.board[3][2] == 1
-
-    def is_empty(self, row, col):
-        if self.board[row][col] == 0:
-            return True
-        else:
+        return wrapper
+    
+    @move
+    def up(self, row, col):
+        # moves the blank upwards
+        if self.blank_row == 0:
             return False
+        else:
+            self.board[row][col], self.board[row-1][col] = self.board[row-1][col], self.board[row][col]
+            self.blank_row -= 1
+            return True
+
+    @move
+    def down(self, row, col):
+        # moves the blank downwards
+        if row < 3 and self.board[row][col] == 0:
+            self.board[row][col], self.board[row+1][col] = self.board[row+1][col], self.board[row][col]
+            self.blank_row += 1
+            return True
+
+    @move
+    def left(self, row, col):
+        # moves the blank left
+        if col > 0 and self.board[row][col] == 0:
+            self.board[row][col], self.board[row][col-1] = self.board[row][col-1], self.board[row][col]
+            self.blank_col -= 1
+            return True
+
+    @move
+    def right(self, row, col):
+        # moves the blank right
+        if col < 3 and self.board[row][col] == 0:
+            self.board[row][col], self.board[row][col+1] = self.board[row][col+1], self.board[row][col]
+            self.blank_col += 1
+            return True
+        
+    
+
+def print_sequence(sequence):
+    print("Steps:", len(sequence) - 1)
+    # prints the sequence of states
+    for state in sequence:
+        for row in state:
+            print(row)
+        print()
 
 def a_star_search(start_state, objective_test, successors, heuristic):
     frontier = []
@@ -74,7 +112,7 @@ def a_star_search(start_state, objective_test, successors, heuristic):
         (cost, state) = heapq.heappop(frontier)
         
         if objective_test(state):
-            return state
+            return state.move_history
         
         explored.add(state)
         
@@ -98,25 +136,25 @@ def solve_klotski(start_board):
         # Try to move the block above the empty space down
         if empty_row > 0 and state.board[empty_row - 1][empty_col] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move("up", empty_row, empty_col)
+            new_state.move(up, empty_row, empty_col)
             successors.append((new_state, 1))
 
         # Try to move the block below the empty space up
         if empty_row < 3 and state.board[empty_row + 1][empty_col] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move("down", empty_row, empty_col)
+            new_state.move(down, empty_row, empty_col)
             successors.append((new_state, 1))
 
         # Try to move the block to the left of the empty space right
         if empty_col > 0 and state.board[empty_row][empty_col - 1] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move("left", empty_row, empty_col)
+            new_state.move(left, empty_row, empty_col)
             successors.append((new_state, 1))
 
         # Try to move the block to the right of the empty space left
         if empty_col < 3 and state.board[empty_row][empty_col + 1] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move("right", empty_row, empty_col)
+            new_state.move(right, empty_row, empty_col)
             successors.append((new_state, 1))
 
         return successors
@@ -124,7 +162,7 @@ def solve_klotski(start_board):
     def heuristic(state):
         return state.manhattan_distance(KlotskiState([[2, 5, 5, 3], [2, 0, 0, 3], [4, 1, 1, 6], [7, 1, 1, 6]]))
 
-    solved_state = a_star_search(start_state, objective_test, successors, heuristic)
+    solved_state = print_sequence(a_star_search(start_state, objective_test, successors, heuristic))
     
     if solved_state:
         print("Solution:")
@@ -155,16 +193,16 @@ if(option==1):
         if game.is_empty(row,col):
             move = input("Enter move (up/down/left/right): ")
             if move == "up":
-                if not game.move("up", row, col):
+                if not game.move(up, row, col):
                     print("Invalid move!")
             elif move == "down":
-                if not game.move("down", row, col):
+                if not game.move(down, row, col):
                     print("Invalid move!")
             elif move == "left":
-                if not game.move("left", row, col):
+                if not game.move(left, row, col):
                     print("Invalid move!")
             elif move == "right":
-                if not game.move("right", row, col):
+                if not game.move(right, row, col):
                     print("Invalid move!")
             else:
                 print("Invalid move!")
