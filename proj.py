@@ -1,9 +1,8 @@
 import heapq
-
+from copy import deepcopy
 class KlotskiState:
     def __init__(self, board, move_history=[]):
-        self.board = board
-        (self.blank_row, self.blank_col) = self.get_empty()
+        self.board = deepcopy(board)
         # create an empty array and append move_history
         self.move_history = [] + move_history + [self.board]
 
@@ -12,12 +11,6 @@ class KlotskiState:
     
     def __hash__(self):
         return hash(tuple(map(tuple, self.board)))
-    
-    def get_empty(self):
-        for i in range(3):
-            for j in range(3):
-                if self.board[i][j] == 0:
-                    return (i, j)
 
     def is_empty(self, row, col):
         if self.board[row][col] == 0:
@@ -44,56 +37,71 @@ class KlotskiState:
                     distance += abs(i - row) + abs(j - col)
         return distance
     
+    def children(self):
+        # returns the possible moves
+        functions = [self.up, self.down, self.left, self.right]
+
+        children = []
+        for func in functions:
+            child = func()
+            if child:
+                children.append(child)
+
+        return children
     
-    # Move the empty space in the specified direction func
-    def move(self, func, row, col):
-        # decorator function to add to history everytime a move is made
-        # functions with @move will apply this decorator
-        def wrapper(self):
-            state = KlotskiState(self.board, self.move_history)
-            value = func(state, row, col)
-            if value:
-                return state
-            else:
-                return None
-            
-        return wrapper
-    
-    @move
+    # Move the empty space in the specified direction
+    def move(self, direction, row, col):
+
+        state = KlotskiState(self.board, self.move_history)
+        if direction == "up":
+            return self.up(row, col)
+        elif direction == "down":
+            return self.down(row, col)
+        elif direction == "left":
+            return self.left(row, col)
+        elif direction == "right":
+            return self.right(row, col)
+        return False
+        
     def up(self, row, col):
         # moves the blank upwards
-        if self.blank_row == 0:
-            return False
+        if row == 0:
+            return False 
         else:
-            self.board[row][col], self.board[row-1][col] = self.board[row-1][col], self.board[row][col]
-            self.blank_row -= 1
+            self.board[row][col] = self.board[row - 1][col]
+            self.board[row - 1][col] = 0
+            self.print_board()
             return True
 
-    @move
     def down(self, row, col):
         # moves the blank downwards
-        if row < 3 and self.board[row][col] == 0:
-            self.board[row][col], self.board[row+1][col] = self.board[row+1][col], self.board[row][col]
-            self.blank_row += 1
+        if row == len(self.board) - 1:
+            return False
+        else:
+            self.board[row][col] = self.board[row + 1][col]
+            self.board[row + 1][col] = 0
+            self.print_board()
             return True
 
-    @move
     def left(self, row, col):
         # moves the blank left
-        if col > 0 and self.board[row][col] == 0:
-            self.board[row][col], self.board[row][col-1] = self.board[row][col-1], self.board[row][col]
-            self.blank_col -= 1
+        if col == 0:
+            return False
+        else:
+            self.board[row][col] = self.board[row][col - 1]
+            self.board[row][col - 1] = 0
+            self.print_board()
             return True
 
-    @move
     def right(self, row, col):
         # moves the blank right
-        if col < 3 and self.board[row][col] == 0:
-            self.board[row][col], self.board[row][col+1] = self.board[row][col+1], self.board[row][col]
-            self.blank_col += 1
+        if col == len(self.board[0]) - 1:
+            return False
+        else:
+            self.board[row][col] = self.board[row][col + 1]
+            self.board[row][col + 1] = 0
+            self.print_board()
             return True
-        
-    
 
 def print_sequence(sequence):
     print("Steps:", len(sequence) - 1)
@@ -103,7 +111,7 @@ def print_sequence(sequence):
             print(row)
         print()
 
-def a_star_search(start_state, objective_test, successors, heuristic):
+def a_star_search(start_state, objective_test, heuristic):
     frontier = []
     heapq.heappush(frontier, (heuristic(start_state), start_state))
     explored = set()
@@ -116,11 +124,9 @@ def a_star_search(start_state, objective_test, successors, heuristic):
         
         explored.add(state)
         
-        for (successor, action_cost) in successors(state):
+        for successor in start_state.children():
             if successor not in explored:
-                new_cost = cost - heuristic(state) + action_cost + heuristic(successor)
-                heapq.heappush(frontier, (new_cost, successor))
-                
+                heapq.heappush(frontier, (cost + heuristic(successor), successor))  
     return None
 
 def solve_klotski(start_board):
@@ -129,7 +135,7 @@ def solve_klotski(start_board):
     def objective_test(state):
         return state.is_solved()
 
-    def successors(state):
+    '''def successors(state):
         successors = []
         empty_row, empty_col = state.get_empty()
 
@@ -157,18 +163,14 @@ def solve_klotski(start_board):
             new_state.move(right, empty_row, empty_col)
             successors.append((new_state, 1))
 
-        return successors
+        return successors'''
+
 
     def heuristic(state):
         return state.manhattan_distance(KlotskiState([[2, 5, 5, 3], [2, 0, 0, 3], [4, 1, 1, 6], [7, 1, 1, 6]]))
 
-    solved_state = print_sequence(a_star_search(start_state, objective_test, successors, heuristic))
+    print_sequence(a_star_search(start_state, objective_test, heuristic))
     
-    if solved_state:
-        print("Solution:")
-        solved_state.print_board()
-    else:
-        print("No solution found.")
 
       
 # Create the game object
@@ -182,36 +184,37 @@ game = KlotskiState(initial_board)
 # Print the initial board
 game.print_board()
 
-option = int(input("1- Player or 2- Computer: \n"))
+option = input("1- Player or 2- Computer: \n")
 
-if(option==1):
+if(option=="1"):
     # Play the game
     while not game.is_solved():
-        row=int(input())
-        col=int(input())
+        row=int(input("Enter row index: "))
+        col=int(input("Enter col index: "))
         print("("+ str(row) + ","+ str(col) + ")")
         if game.is_empty(row,col):
+            
             move = input("Enter move (up/down/left/right): ")
             if move == "up":
-                if not game.move(up, row, col):
+                if not game.move("up", row, col):
                     print("Invalid move!")
             elif move == "down":
-                if not game.move(down, row, col):
+                if not game.move("down", row, col):
                     print("Invalid move!")
             elif move == "left":
-                if not game.move(left, row, col):
+                if not game.move("left", row, col):
                     print("Invalid move!")
             elif move == "right":
-                if not game.move(right, row, col):
+                if not game.move("right", row, col):
                     print("Invalid move!")
             else:
                 print("Invalid move!")
-            game.print_board()
+            
         else: print("Invalid index!")
 
     print("Congratulations, you solved the puzzle!")
 
-elif(option==2):
+elif(option=="2"):
     solve_klotski(initial_board)
 
 else: print("Invalid Input")
