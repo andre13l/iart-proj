@@ -20,12 +20,6 @@ class KlotskiState:
     
     def is_solved(self):
         return self.board[3][1] == 1 and self.board[3][2] == 1
-    
-    def print_board(self):
-        for i in range(len(self.board)):
-            for j in range(len(self.board[0])):
-                print(self.board[i][j], end=" ", flush=True)
-            print(flush=True)
             
     def manhattan_distance(self, goal_state):
         distance = 0
@@ -49,60 +43,60 @@ class KlotskiState:
 
         return children
     
-    # Move the empty space in the specified direction
-    def move(self, direction, row, col):
-
-        state = KlotskiState(self.board, self.move_history)
-        if direction == "up":
-            return self.up(row, col)
-        elif direction == "down":
-            return self.down(row, col)
-        elif direction == "left":
-            return self.left(row, col)
-        elif direction == "right":
-            return self.right(row, col)
+# Define function to check if the move is valid
+def is_valid_move(board, piece_positions, direction):
+    row, col = piece_positions[0]
+    row_delta, col_delta = direction
+    
+    # Check if the move is within the board boundaries
+    if not (0 <= row + row_delta < len(board) and 0 <= col + col_delta < len(board[0])):
         return False
+    
+    # Check if the destination cell is empty or has the same piece as the moving one
+    if board[row + row_delta][col + col_delta] not in [0, board[row][col]]:
+        return False
+    
+    # Check if there are any obstacles in the way
+    for r, c in piece_positions:
+        if board[r + row_delta][c + col_delta] != 0 and (r + row_delta, c + col_delta) not in piece_positions:
+            return False
+    
+    return True
+
+
+# Define function to move the selected piece in the specified direction
+def move_piece(board, piece, direction):
+    pieces = []
+
+    # Find the positions of the pieces to move
+    for i in range(len(board)):
+        for j in range(len(board[i])):
+            if board[i][j] == piece:
+                pieces.append((i, j))
+
+    # Check if the move is valid
+    if not is_valid_move(board, pieces, direction):
+        print("Invalid move!")
+        return board
+
+    # Move the piece to the new position
+    new_board = [row[:] for row in board]
+    row_delta, col_delta = direction
+    for r, c in sorted(pieces, reverse=True):
+        if new_board[r + row_delta][c + col_delta] == 0:
+            new_board[r][c] = 0
+            new_board[r + row_delta][c + col_delta] = piece
+            if new_board[r - row_delta][c - col_delta] == piece:
+                new_board[r][c] = piece
+                new_board[r - row_delta][c - col_delta] = 0
+    return new_board
+
+def print_board(board):
+    for i in range(len(board)):
+        for j in range(len(board[0])):
+            print(board[i][j], end=" ", flush=True)
+        print(flush=True)
         
-    def up(self, row, col):
-        # moves the blank upwards
-        if row == 0:
-            return False 
-        else:
-            self.board[row][col] = self.board[row - 1][col]
-            self.board[row - 1][col] = 0
-            self.print_board()
-            return True
-
-    def down(self, row, col):
-        # moves the blank downwards
-        if row == len(self.board) - 1:
-            return False
-        else:
-            self.board[row][col] = self.board[row + 1][col]
-            self.board[row + 1][col] = 0
-            self.print_board()
-            return True
-
-    def left(self, row, col):
-        # moves the blank left
-        if col == 0:
-            return False
-        else:
-            self.board[row][col] = self.board[row][col - 1]
-            self.board[row][col - 1] = 0
-            self.print_board()
-            return True
-
-    def right(self, row, col):
-        # moves the blank right
-        if col == len(self.board[0]) - 1:
-            return False
-        else:
-            self.board[row][col] = self.board[row][col + 1]
-            self.board[row][col + 1] = 0
-            self.print_board()
-            return True
-
 def print_sequence(sequence):
     print("Steps:", len(sequence) - 1)
     # prints the sequence of states
@@ -138,31 +132,26 @@ def solve_klotski(start_board):
     '''def successors(state):
         successors = []
         empty_row, empty_col = state.get_empty()
-
         # Try to move the block above the empty space down
         if empty_row > 0 and state.board[empty_row - 1][empty_col] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
             new_state.move(up, empty_row, empty_col)
             successors.append((new_state, 1))
-
         # Try to move the block below the empty space up
         if empty_row < 3 and state.board[empty_row + 1][empty_col] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
             new_state.move(down, empty_row, empty_col)
             successors.append((new_state, 1))
-
         # Try to move the block to the left of the empty space right
         if empty_col > 0 and state.board[empty_row][empty_col - 1] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
             new_state.move(left, empty_row, empty_col)
             successors.append((new_state, 1))
-
         # Try to move the block to the right of the empty space left
         if empty_col < 3 and state.board[empty_row][empty_col + 1] != 0:
             new_state = KlotskiState([row[:] for row in state.board])
             new_state.move(right, empty_row, empty_col)
             successors.append((new_state, 1))
-
         return successors'''
 
 
@@ -181,36 +170,35 @@ initial_board = [[2, 1, 1, 3],
 
 game = KlotskiState(initial_board)
 
-# Print the initial board
-game.print_board()
-
 option = input("1- Player or 2- Computer: \n")
 
 if(option=="1"):
     # Play the game
     while not game.is_solved():
-        row=int(input("Enter row index: "))
-        col=int(input("Enter col index: "))
-        print("("+ str(row) + ","+ str(col) + ")")
-        if game.is_empty(row,col):
-            
-            move = input("Enter move (up/down/left/right): ")
-            if move == "up":
-                if not game.move("up", row, col):
-                    print("Invalid move!")
-            elif move == "down":
-                if not game.move("down", row, col):
-                    print("Invalid move!")
-            elif move == "left":
-                if not game.move("left", row, col):
-                    print("Invalid move!")
-            elif move == "right":
-                if not game.move("right", row, col):
-                    print("Invalid move!")
-            else:
-                print("Invalid move!")
-            
-        else: print("Invalid index!")
+        print_board(initial_board)
+    
+        # Get input from the user for the piece to move
+        selected_piece = int(input("Enter the number of the piece to move: "))
+        
+        # Get input from the user for the direction to move the piece
+        direction = input("Enter the direction to move the piece (up, down, left, right): ")
+        if direction == "up":
+            direction = (-1, 0)
+        elif direction == "down":
+            direction = (1, 0)
+        elif direction == "left":
+            direction = (0, -1)
+        elif direction == "right":
+            direction = (0, 1)
+        else:
+            print("Invalid direction!")
+            continue
+        
+        # Move the piece in the specified direction
+        new_board = move_piece(initial_board, selected_piece, direction)
+        
+        # Update the board
+        initial_board = new_board
 
     print("Congratulations, you solved the puzzle!")
 
