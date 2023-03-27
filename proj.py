@@ -3,6 +3,7 @@ from copy import deepcopy
 class KlotskiState:
     def __init__(self, board, move_history=[]):
         self.board = deepcopy(board)
+        #self.empty = []
         # create an empty array and append move_history
         self.move_history = [] + move_history + [self.board]
 
@@ -17,6 +18,19 @@ class KlotskiState:
             return True
         else:
             return False
+        
+    '''def get_empty(self):
+        count = 0
+        empty1 = 0 
+        empty2 = 0
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if self.board[i][j] == 0 and count==0:
+                    empty1 = (i, j)
+                    count+=1
+                elif self.board[i][j] == 0:
+                    empty2 = (i, j)
+                self.empty.append((empty1, empty2))'''
     
     def is_solved(self):
         return self.board[3][1] == 1 and self.board[3][2] == 1
@@ -86,7 +100,8 @@ def move_piece(board, piece, direction):
         if new_board[r + row_delta][c + col_delta] == 0:
             new_board[r][c] = 0
             new_board[r + row_delta][c + col_delta] = piece
-            if new_board[r - row_delta][c - col_delta] == piece:
+            #print("|"+ str(r) +","+ str(c) + "|\n" + "|"+ str(row_delta) +","+ str(col_delta) + "|")
+            if row_delta>=0 and col_delta>=0 and new_board[r - row_delta][c - col_delta] == piece:
                 new_board[r][c] = piece
                 new_board[r - row_delta][c - col_delta] = 0
     return new_board
