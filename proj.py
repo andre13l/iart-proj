@@ -101,9 +101,10 @@ def move_piece(board, piece, direction):
             new_board[r][c] = 0
             new_board[r + row_delta][c + col_delta] = piece
             #print("|"+ str(r) +","+ str(c) + "|\n" + "|"+ str(row_delta) +","+ str(col_delta) + "|")
-            if row_delta>=0 and col_delta>=0 and new_board[r - row_delta][c - col_delta] == piece:
+            if r-row_delta>=0 and r-row_delta<len(board) and c-col_delta>=0 and c-col_delta<len(board) and new_board[r - row_delta][c - col_delta] == piece:
                 new_board[r][c] = piece
-                new_board[r - row_delta][c - col_delta] = 0
+                new_board[r - row_delta][c - col_delta] = 0 
+            
     return new_board
 
 def print_board(board):
