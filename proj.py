@@ -2,8 +2,8 @@ import heapq
 from copy import deepcopy
 class KlotskiState:
     def __init__(self, board, move_history=[]):
-        self.board = deepcopy(board)
-        #self.empty = []
+        self.board = board
+        self.empty = self.get_empty()
         # create an empty array and append move_history
         self.move_history = [] + move_history + [self.board]
 
@@ -19,7 +19,7 @@ class KlotskiState:
         else:
             return False
         
-    '''def get_empty(self):
+    def get_empty(self):
         count = 0
         empty1 = 0 
         empty2 = 0
@@ -30,7 +30,8 @@ class KlotskiState:
                     count+=1
                 elif self.board[i][j] == 0:
                     empty2 = (i, j)
-                self.empty.append((empty1, empty2))'''
+        empty = [empty1, empty2]
+        return empty
     
     def is_solved(self):
         return self.board[3][1] == 1 and self.board[3][2] == 1
@@ -45,17 +46,6 @@ class KlotskiState:
                     distance += abs(i - row) + abs(j - col)
         return distance
     
-    def children(self):
-        # returns the possible moves
-        functions = [self.up, self.down, self.left, self.right]
-
-        children = []
-        for func in functions:
-            child = func()
-            if child:
-                children.append(child)
-
-        return children
     
 # Define function to check if the move is valid
 def is_valid_move(board, piece_positions, direction):
@@ -121,9 +111,9 @@ def print_sequence(sequence):
             print(row)
         print()
 
-def a_star_search(start_state, objective_test, heuristic):
+def a_star_search(start_state, goal_state, objective_test, successors, heuristic):
     frontier = []
-    heapq.heappush(frontier, (heuristic(start_state), start_state))
+    heapq.heappush(frontier, (heuristic(start_state, goal_state), start_state))
     explored = set()
     
     while frontier:
@@ -134,47 +124,23 @@ def a_star_search(start_state, objective_test, heuristic):
         
         explored.add(state)
         
-        for successor in start_state.children():
+        for (successor, action_cost) in successors(state):
             if successor not in explored:
-                heapq.heappush(frontier, (cost + heuristic(successor), successor))  
+                new_cost = cost - heuristic(state, goal_state) + action_cost + heuristic(successor, goal_state)
+                heapq.heappush(frontier, (new_cost, successor)) 
     return None
 
-def solve_klotski(start_board):
-    start_state = KlotskiState(start_board)
+def successors(state):
+        for i in range(len(state.board)):
+            for j in range(len(state.board[0])):
+                if state.board[i][j] != 0:
+                    for d in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                        if is_valid_move(state.board, [(i, j)], d):
+                            new_board = move_piece(state.board, state.board[i][j], d)
+                            yield (KlotskiState(new_board, state.move_history), 1)
 
-    def objective_test(state):
-        return state.is_solved()
-
-    '''def successors(state):
-        successors = []
-        empty_row, empty_col = state.get_empty()
-        # Try to move the block above the empty space down
-        if empty_row > 0 and state.board[empty_row - 1][empty_col] != 0:
-            new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move(up, empty_row, empty_col)
-            successors.append((new_state, 1))
-        # Try to move the block below the empty space up
-        if empty_row < 3 and state.board[empty_row + 1][empty_col] != 0:
-            new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move(down, empty_row, empty_col)
-            successors.append((new_state, 1))
-        # Try to move the block to the left of the empty space right
-        if empty_col > 0 and state.board[empty_row][empty_col - 1] != 0:
-            new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move(left, empty_row, empty_col)
-            successors.append((new_state, 1))
-        # Try to move the block to the right of the empty space left
-        if empty_col < 3 and state.board[empty_row][empty_col + 1] != 0:
-            new_state = KlotskiState([row[:] for row in state.board])
-            new_state.move(right, empty_row, empty_col)
-            successors.append((new_state, 1))
-        return successors'''
-
-
-    def heuristic(state):
-        return state.manhattan_distance(KlotskiState([[2, 5, 5, 3], [2, 0, 0, 3], [4, 1, 1, 6], [7, 1, 1, 6]]))
-
-    print_sequence(a_star_search(start_state, objective_test, heuristic))
+def solve_klotski(start_state, goal_state):
+    return a_star_search(start_state, goal_state, KlotskiState.is_solved, successors, KlotskiState.manhattan_distance)
     
 
       
@@ -192,7 +158,6 @@ if(option=="1"):
     # Play the game
     while not game.is_solved():
         print_board(initial_board)
-    
         # Get input from the user for the piece to move
         selected_piece = int(input("Enter the number of the piece to move: "))
         
@@ -219,6 +184,11 @@ if(option=="1"):
     print("Congratulations, you solved the puzzle!")
 
 elif(option=="2"):
-    solve_klotski(initial_board)
+    goal_state = [[4, 5, 5, 3],
+                 [7, 0, 0, 3],
+                 [6, 1, 1, 2],
+                 [6, 1, 1, 2]]
+    solution = solve_klotski(initial_board, goal_state)
+    print_sequence(solution)
 
 else: print("Invalid Input")
