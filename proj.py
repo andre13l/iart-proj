@@ -1,14 +1,19 @@
 import heapq
+import itertools
 from copy import deepcopy
 class KlotskiState:
-    def __init__(self, board, move_history=[]):
-        self.board = board
+    def __init__(self, board, move_history=[], cost=0):
+        self.board = deepcopy(board)
         self.empty = self.get_empty()
+        self.cost = cost
         # create an empty array and append move_history
         self.move_history = [] + move_history + [self.board]
 
     def __eq__(self, other):
         return self.board == other.board
+    
+    def __lt__(self, other):
+        return self.cost < other.cost
     
     def __hash__(self):
         return hash(tuple(map(tuple, self.board)))
@@ -34,16 +39,24 @@ class KlotskiState:
         return empty
     
     def is_solved(self):
-        return self.board[3][1] == 1 and self.board[3][2] == 1
+        return self.board[4][1] == 1 and self.board[4][2] == 1
             
     def manhattan_distance(self, goal_state):
         distance = 0
-
+        # Flatten the self.board and goal_state.board temporarily
+        flat_board = [val for sublist in self.board for val in sublist]
+        flat_goal_board = [val for sublist in goal_state.board for val in sublist]
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
                 if self.board[i][j] != 0:
-                    row, col = divmod(goal_state.board.index(self.board[i][j]), len(self.board[0]))
+                    #print(f'i->{i}, j-> {j}\n')
+                    #print(f'atual state: {self.board}, goal state: {goal_state.board}')
+                    # Use the index function on the flattened lists
+                    index = flat_goal_board.index(self.board[i][j])
+                    row, col = divmod(index, len(self.board[0]))
                     distance += abs(i - row) + abs(j - col)
+                    #print(row, col)
+                    #print(distance)
         return distance
     
     
@@ -71,7 +84,7 @@ def is_valid_move(board, piece_positions, direction):
 # Define function to move the selected piece in the specified direction
 def move_piece(board, piece, direction):
     pieces = []
-
+    
     # Find the positions of the pieces to move
     for i in range(len(board)):
         for j in range(len(board[i])):
@@ -90,11 +103,11 @@ def move_piece(board, piece, direction):
         if new_board[r + row_delta][c + col_delta] == 0:
             new_board[r][c] = 0
             new_board[r + row_delta][c + col_delta] = piece
-            #print("|"+ str(r) +","+ str(c) + "|\n" + "|"+ str(row_delta) +","+ str(col_delta) + "|")
-            if r-row_delta>=0 and r-row_delta<len(board) and c-col_delta>=0 and c-col_delta<len(board) and new_board[r - row_delta][c - col_delta] == piece:
+            if r-row_delta>=0 and r-row_delta<len(board) and c-col_delta>=0 and c-col_delta<len(board[r]) and new_board[r - row_delta][c - col_delta] == piece:
                 new_board[r][c] = piece
                 new_board[r - row_delta][c - col_delta] = 0 
-            
+            #print("|"+ str(r) +","+ str(c) + "|\n" + "|"+ str(row_delta) +","+ str(col_delta) + "|\n")
+    
     return new_board
 
 def print_board(board):
@@ -111,15 +124,27 @@ def print_sequence(sequence):
             print(row)
         print()
 
+def successors(state):
+
+    for i in range(len(state.board)):
+        for j in range(len(state.board[0])):
+            if state.board[i][j] != 0:
+                for d in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                    if is_valid_move(state.board, [(i, j)], d):
+                        new_board = move_piece(state.board, state.board[i][j], d)
+                        #print_board(new_board)
+                        yield (KlotskiState(new_board, state.move_history + [new_board], cost=1), 1)
+
 def a_star_search(start_state, goal_state, objective_test, successors, heuristic):
     frontier = []
     heapq.heappush(frontier, (heuristic(start_state, goal_state), start_state))
     explored = set()
-    
+    #print_board(start_state.board)
     while frontier:
         (cost, state) = heapq.heappop(frontier)
         
         if objective_test(state):
+            print("\nPuzzle Solved!\n")
             return state.move_history
         
         explored.add(state)
@@ -128,16 +153,9 @@ def a_star_search(start_state, goal_state, objective_test, successors, heuristic
             if successor not in explored:
                 new_cost = cost - heuristic(state, goal_state) + action_cost + heuristic(successor, goal_state)
                 heapq.heappush(frontier, (new_cost, successor)) 
-    return None
 
-def successors(state):
-        for i in range(len(state.board)):
-            for j in range(len(state.board[0])):
-                if state.board[i][j] != 0:
-                    for d in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                        if is_valid_move(state.board, [(i, j)], d):
-                            new_board = move_piece(state.board, state.board[i][j], d)
-                            yield (KlotskiState(new_board, state.move_history), 1)
+    print("No solution found!!")
+    return None
 
 def solve_klotski(start_state, goal_state):
     return a_star_search(start_state, goal_state, KlotskiState.is_solved, successors, KlotskiState.manhattan_distance)
@@ -145,10 +163,17 @@ def solve_klotski(start_state, goal_state):
 
       
 # Create the game object
-initial_board = [[2, 1, 1, 3],
-                 [2, 1, 1, 3],
-                 [4, 5, 5, 6],
-                 [0, 7, 0, 6]]
+initial_board = [[4, 1, 1, 5],
+                 [6, 1, 1, 7],
+                 [2, 8, 9, 3],
+                 [2, 10, 11, 3], 
+                 [12, 0, 0, 13]]
+
+test_board =    [[2, 6, 7, 3],
+                 [2, 4, 5, 3],
+                 [10, 1, 1, 11],
+                 [12, 1, 1, 13], 
+                 [8, 0, 0, 9]]
 
 game = KlotskiState(initial_board)
 
@@ -157,7 +182,7 @@ option = input("1- Player or 2- Computer: \n")
 if(option=="1"):
     # Play the game
     while not game.is_solved():
-        print_board(initial_board)
+        print_board(game.board)
         # Get input from the user for the piece to move
         selected_piece = int(input("Enter the number of the piece to move: "))
         
@@ -176,19 +201,23 @@ if(option=="1"):
             continue
         
         # Move the piece in the specified direction
-        new_board = move_piece(initial_board, selected_piece, direction)
+        new_board = move_piece(game.board, selected_piece, direction)
         
         # Update the board
-        initial_board = new_board
+        game.board = new_board
 
-    print("Congratulations, you solved the puzzle!")
+    print("\nCongratulations, you solved the puzzle!\n")
 
 elif(option=="2"):
-    goal_state = [[4, 5, 5, 3],
-                 [7, 0, 0, 3],
-                 [6, 1, 1, 2],
-                 [6, 1, 1, 2]]
-    solution = solve_klotski(initial_board, goal_state)
-    print_sequence(solution)
+    goal_state = [[2, 6, 7, 3],
+                 [2, 4, 5, 3],
+                 [10, 0, 0, 11],
+                 [12, 1, 1, 13], 
+                 [8, 1, 1, 9]]
+    
+    game_final = KlotskiState(goal_state)
+    solution = solve_klotski(game, game_final)
+    if(solution!=None):
+        print_sequence(solution)
 
 else: print("Invalid Input")
