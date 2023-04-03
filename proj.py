@@ -133,7 +133,7 @@ def successors(state):
                     if is_valid_move(state.board, [(i, j)], d):
                         new_board = move_piece(state.board, state.board[i][j], d)
                         #print_board(new_board)
-                        yield (KlotskiState(new_board, state.move_history + [new_board], cost=1), 1)
+                        yield (KlotskiState(new_board, state.move_history, cost=1), 1)
 
 def a_star_search(start_state, goal_state, objective_test, successors, heuristic):
     frontier = []
@@ -204,40 +204,30 @@ def get_possible_moves(board):
     
     return possible_moves
 
-def bfs(initial_board, goal_state):
-    # Initialize the queue with the initial board and an empty path
-    queue = deque([(initial_board, [])])
-    # Initialize a set to keep track of visited boards
-    visited = set()
-    
-    while queue:
-        board, path = queue.popleft()
+def bfs(start_state, objective_test, successors):
+    frontier = []
+    heapq.heappush(frontier, start_state)
+    explored = set()
+    #print_board(start_state.board)
+    while frontier:
+        state = heapq.heappop(frontier)
         
-        # Convert the board from list to tuple
-        board = tuple(map(tuple, board))
+        if objective_test(state):
+            print("\nPuzzle Solved!\n")
+            return state.move_history
         
-        if board == goal_state:
-            # If we've found the goal state, return the path to it
-            return path
+        explored.add(state)
         
-        if board in visited:
-            # If we've already visited this board, skip it
-            continue
-        visited.add(board)
-        
-        # Generate all possible moves from the current board
-        for move in get_possible_moves(board):
-            new_board = make_move(board, move[0], move[1])
-            new_path = path + [move]
-            
-            # Convert the new board from list to tuple
-            new_board = tuple(map(tuple, new_board))
-            
-            queue.append((new_board, new_path))
+        for (successor,_) in successors(state):
+            if successor not in explored:
+                heapq.heappush(frontier, successor) 
 
-    # If we've exhausted all possible moves and haven't found the goal state, return None
     print("No solution found!!")
-    return queue
+    return None
+    
+
+def bfs_solve(start_state):
+    return bfs(start_state, KlotskiState.is_solved, successors)
 
 def print_board_sequence(initial_board, path):
     board_sequence = [initial_board]
@@ -257,10 +247,10 @@ initial_board = [[4, 1, 1, 5],
 test_board =    [[2, 6, 7, 3],
                  [2, 4, 5, 3],
                  [10, 1, 1, 11],
-                 [12, 1, 1, 13], 
-                 [8, 0, 0, 9]]
+                 [12, 1, 1, 0], 
+                 [0, 8, 9, 13]]
 
-game = KlotskiState(initial_board)
+game = KlotskiState(test_board)
 
 option = input("1-Player -- 2-A* -- 3-BFS  : \n")
 
@@ -317,7 +307,12 @@ elif(option=="3"):
                 [10, 0, 0, 11],
                 [12, 1, 1, 13], 
                 [8, 1, 1, 9]]
-    memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
-    print("Memory used:", memory_used, "MB")
-    print("Time spent:", time.process_time(), "seconds")
+    
+    solution = bfs_solve(game)
+    if(solution!=None):
+        memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
+        print_sequence(solution)
+        print("Number of moves", len(solution)-1)
+        print("Memory used:", memory_used, "MB")
+        print("Time spent:", time.process_time(), "seconds")
 else: print("Invalid Input")
