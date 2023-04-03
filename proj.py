@@ -205,12 +205,11 @@ def get_possible_moves(board):
     return possible_moves
 
 def bfs(start_state, objective_test, successors):
-    frontier = []
-    heapq.heappush(frontier, start_state)
+    frontier = [start_state]
     explored = set()
     #print_board(start_state.board)
     while frontier:
-        state = heapq.heappop(frontier)
+        state = frontier.pop()
         
         if objective_test(state):
             print("\nPuzzle Solved!\n")
@@ -220,7 +219,7 @@ def bfs(start_state, objective_test, successors):
         
         for (successor,_) in successors(state):
             if successor not in explored:
-                heapq.heappush(frontier, successor) 
+                frontier.append(successor) 
 
     print("No solution found!!")
     return None
@@ -250,7 +249,7 @@ test_board =    [[2, 6, 7, 3],
                  [12, 1, 1, 0], 
                  [0, 8, 9, 13]]
 
-game = KlotskiState(test_board)
+game = KlotskiState(initial_board)
 
 option = input("1-Player -- 2-A* -- 3-BFS  : \n")
 
