@@ -1,5 +1,6 @@
 import heapq
-import itertools
+import time
+import psutil
 from copy import deepcopy
 class KlotskiState:
     def __init__(self, board, move_history=[], cost=0):
@@ -93,7 +94,6 @@ def move_piece(board, piece, direction):
 
     # Check if the move is valid
     if not is_valid_move(board, pieces, direction):
-        print("Invalid move!")
         return board
 
     # Move the piece to the new position
@@ -115,9 +115,8 @@ def print_board(board):
         for j in range(len(board[0])):
             print(board[i][j], end=" ", flush=True)
         print(flush=True)
-        
+
 def print_sequence(sequence):
-    print("Steps:", len(sequence) - 1)
     # prints the sequence of states
     for state in sequence:
         for row in state:
@@ -209,15 +208,20 @@ if(option=="1"):
     print("\nCongratulations, you solved the puzzle!\n")
 
 elif(option=="2"):
-    goal_state = [[2, 6, 7, 3],
-                 [2, 4, 5, 3],
-                 [10, 0, 0, 11],
-                 [12, 1, 1, 13], 
-                 [8, 1, 1, 9]]
+    goal_state = [
+                [2, 6, 7, 3],
+                [2, 4, 5, 3],
+                [10, 0, 0, 11],
+                [12, 1, 1, 13], 
+                [8, 1, 1, 9]]
     
     game_final = KlotskiState(goal_state)
     solution = solve_klotski(game, game_final)
     if(solution!=None):
+        memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
         print_sequence(solution)
+        print("Number of moves", len(solution)-1)
+        print("Memory used:", memory_used, "MB")
+        print("Time spent:", time.process_time(), "seconds")
 
 else: print("Invalid Input")
