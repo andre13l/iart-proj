@@ -3,6 +3,7 @@ import time
 import psutil
 from copy import deepcopy
 from collections import deque
+import os
 class KlotskiState:
     def __init__(self, board, move_history=[], cost=0):
         self.board = deepcopy(board)
@@ -208,6 +209,7 @@ def dfs(start_state, objective_test, successors, depth_limit):
 
 def dfs_solve(start_state):
     return dfs(start_state, KlotskiState.is_solved,successors, 20)
+
 # Create the game object
 initial_board1 = [[4, 9, 8, 5],
                  [6, 11, 10, 7],
@@ -230,7 +232,18 @@ initial_board4 = [[2, 7, 7, 8],
                  [3, 5, 6, 9], 
                  [4, 0, 0, 10]]
 
-board_choice = input("Choose a level from 1-4:\n")
+
+print("\n\n##########################################################\n")
+print("\n##---------------------KLOTSKI GAME---------------------##\n")
+print("\n##########################################################\n\n")
+print(" MENU INICIAL: Digite o NIVEL de jogo desejado\n\n")
+print("\t(1) Nivel 1\n")
+print("\t(2) Nivel 2\n")
+print("\t(3) Nivel 3\n")
+print("\t(4) Nivel 4\n\n")
+print("\t(5) Sair\n\n")
+
+board_choice = input()
 if(board_choice=="1"):
     initial_board=initial_board1
     goal_state = [[4, 9, 8, 5],
@@ -259,12 +272,25 @@ elif(board_choice=="4"):
                  [7, 7, 4, 6],
                  [10, 1, 1, 0], 
                  [5, 1, 1, 0]]
+elif(board_choice=="5"):
+    exit()       
 else:
     print("invalid board choice!!!\n")
 
 game = KlotskiState(initial_board)
+os.system('cls' if os.name == 'nt' else 'clear')     # limpar a tela
 
-option = input("1-Player \n2-A* \n3-BFS \n4-DFS \n")
+print("\n\n##########################################################\n")
+print("\n##---------------------KLOTSKI GAME---------------------##\n")
+print("\n##########################################################\n\n")
+print(" MENU INICIAL: Digite o MODO de jogo desejado\n\n")
+print("\t(1) Player Mode\n")
+print("\t(2) Computer Mode | A* search |\n")
+print("\t(3) Computer Mode | BFS search |\n")
+print("\t(4) Computer Mode | DFS search |\n\n")
+print("\t(5) Sair\n\n")
+# Processar a opção escolhida     
+option = input()
 
 if(option=="1"):
     # Play the game
@@ -340,6 +366,8 @@ elif(option=="4"):
         f.write("Number of moves: " + str(len(solution)-1) + "\n")
         f.write("Memory used: " + str(memory_used) + " MB\n")
         f.write("Time spent: " +  str(time.process_time()) + " seconds\n")
+
+elif(option==5): exit() 
 else: print("Invalid Input")
 
 f.close()
