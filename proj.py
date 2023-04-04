@@ -159,53 +159,34 @@ def a_star_search(start_state, goal_state, objective_test, successors, heuristic
 
 def a_star_solve(start_state, goal_state):
     return a_star_search(start_state, goal_state, KlotskiState.is_solved, successors, KlotskiState.manhattan_distance)
-
-def make_move(board, piece, direction):
-    pieces = []
-    
-    # Find the positions of the pieces to move
-    for i in range(len(board)):
-        for j in range(len(board[i])):
-            if board[i][j] == piece:
-                pieces.append((i, j))
-
-    # Check if the move is valid
-    if not is_valid_move(board, pieces, direction):
-        return board
-
-    # Move the piece to the new position
-    new_board = [row[:] for row in board]
-    row_delta, col_delta = direction
-    for r, c in sorted(pieces, reverse=True):
-        if new_board[r + row_delta][c + col_delta] == 0:
-            new_board[r][c] = 0
-            new_board[r + row_delta][c + col_delta] = piece
-            if r-row_delta>=0 and r-row_delta<len(board) and c-col_delta>=0 and c-col_delta<len(board[r]) and new_board[r - row_delta][c - col_delta] == piece:
-                new_board[r][c] = piece
-                new_board[r - row_delta][c - col_delta] = 0 
-
-    return new_board
-
-
-# Define function to get all possible moves for a given board state
-def get_possible_moves(board):
-    possible_moves = []
-    
-    # Loop through all the pieces on the board
-    for i in range(len(board)):
-        for j in range(len(board[i])):
-            if board[i][j] != 0:
-                # Try moving the piece in all possible directions
-                for direction in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                    new_board = move_piece(board, board[i][j], direction)
-                    # Only add the move to the list if it results in a new board state
-                    if new_board != board:
-                        possible_moves.append((board[i][j], direction))
-    
-    return possible_moves
-
 def bfs(start_state, objective_test, successors):
-    frontier = [start_state]
+    frontier = []
+    heapq.heappush(frontier, start_state)
+    explored = set()
+    #print_board(start_state.board)
+    while frontier:
+        state = heapq.heappop(frontier)
+        
+        if objective_test(state):
+            print("\nPuzzle Solved!\n")
+            return state.move_history
+        
+        explored.add(state)
+        
+        for (successor,_) in successors(state):
+            if successor not in explored:
+                heapq.heappush(frontier, successor) 
+
+    print("No solution found!!")
+    return None
+    
+
+def bfs_solve(start_state):
+    return bfs(start_state, KlotskiState.is_solved, successors)
+
+def dfs(start_state, objective_test, successors):
+    frontier = []
+    frontier.append(start_state)
     explored = set()
     #print_board(start_state.board)
     while frontier:
@@ -217,41 +198,25 @@ def bfs(start_state, objective_test, successors):
         
         explored.add(state)
         
-        for (successor,_) in successors(state):
+        for (successor,_) in successors(state)[::-1]:
             if successor not in explored:
                 frontier.append(successor) 
 
     print("No solution found!!")
     return None
-    
 
-def bfs_solve(start_state):
-    return bfs(start_state, KlotskiState.is_solved, successors)
-
-def print_board_sequence(initial_board, path):
-    board_sequence = [initial_board]
-    for move in path:
-        piece, direction = move
-        board_sequence.append(make_move(board_sequence[-1], piece, direction))
-    for board in board_sequence:
-        print_sequence(board)
-        print()      
+def dfs_solve(start_state):
+    return dfs(start_state, KlotskiState.is_solved,successors)
 # Create the game object
-initial_board = [[4, 1, 1, 5],
+initial_board = [[4, 9, 8, 5],
                  [6, 1, 1, 7],
-                 [2, 8, 9, 3],
-                 [2, 10, 11, 3], 
+                 [2, 1, 1, 3],
+                 [14, 10, 11, 3], 
                  [12, 0, 0, 13]]
-
-test_board =    [[2, 6, 7, 3],
-                 [2, 4, 5, 3],
-                 [10, 1, 1, 11],
-                 [12, 1, 1, 0], 
-                 [0, 8, 9, 13]]
 
 game = KlotskiState(initial_board)
 
-option = input("1-Player -- 2-A* -- 3-BFS  : \n")
+option = input("1-Player \n2-A* \n3-BFS \n4-DFS \n")
 
 if(option=="1"):
     # Play the game
@@ -285,7 +250,7 @@ if(option=="1"):
 elif(option=="2"):
     goal_state = [
                 [2, 6, 7, 3],
-                [2, 4, 5, 3],
+                [14, 4, 5, 3],
                 [10, 0, 0, 11],
                 [12, 1, 1, 13], 
                 [8, 1, 1, 9]]
@@ -300,14 +265,18 @@ elif(option=="2"):
         print("Time spent:", time.process_time(), "seconds")
 
 elif(option=="3"):
-    goal_state=[
-                [2, 6, 7, 3],
-                [2, 4, 5, 3],
-                [10, 0, 0, 11],
-                [12, 1, 1, 13], 
-                [8, 1, 1, 9]]
-    
+   
     solution = bfs_solve(game)
+    if(solution!=None):
+        memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
+        print_sequence(solution)
+        print("Number of moves", len(solution)-1)
+        print("Memory used:", memory_used, "MB")
+        print("Time spent:", time.process_time(), "seconds")
+
+elif(option=="4"):
+   
+    solution = dfs_solve(game)
     if(solution!=None):
         memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
         print_sequence(solution)
