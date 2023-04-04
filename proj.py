@@ -117,7 +117,6 @@ def print_board(board):
         print(flush=True)
 
 def successors(state):
-
     for i in range(len(state.board)):
         for j in range(len(state.board[0])):
             if state.board[i][j] != 0:
@@ -178,7 +177,7 @@ def bfs(start_state, objective_test, successors, depth_limit=None):
     
 
 def bfs_solve(start_state):
-    return bfs(start_state, KlotskiState.is_solved, successors, 13)
+    return bfs(start_state, KlotskiState.is_solved, successors, 200)
 
 def dfs(start_state, objective_test, successors, depth_limit):
     frontier = [(start_state, 0)]
@@ -191,6 +190,7 @@ def dfs(start_state, objective_test, successors, depth_limit):
             continue
 
         if objective_test(state):
+            f.write("\nPuzzle Solved!\n")
             return state.move_history
         
         explored.add(state)
@@ -202,17 +202,45 @@ def dfs(start_state, objective_test, successors, depth_limit):
             if successor not in explored:
                 frontier.append((successor, depth + 1))
 
+    f.write("No solution found!!") 
     return None
 
 
 def dfs_solve(start_state):
-    return dfs(start_state, KlotskiState.is_solved,successors, 20)
+    return dfs(start_state, KlotskiState.is_solved,successors, 200)
 # Create the game object
-initial_board = [[4, 9, 8, 5],
+initial_board1 = [[4, 9, 8, 5],
+                 [6, 11, 10, 7],
+                 [2, 0, 12, 3],
+                 [0, 1, 1, 3], 
+                 [14, 1, 1, 13]]
+initial_board2 = [[4, 9, 8, 5],
+                 [6, 11, 10, 7],
+                 [2, 1, 1, 3],
+                 [12, 1, 1, 3], 
+                 [14, 0, 0, 13]]
+initial_board3 = [[4, 9, 8, 5],
                  [6, 11, 10, 7],
                  [1, 1, 12, 3],
                  [1, 1, 0, 3], 
                  [14, 2, 0, 13]]
+initial_board4 = [[2, 7, 7, 8],
+                 [2, 1, 1, 8],
+                 [3, 1, 1, 9],
+                 [3, 5, 6, 9], 
+                 [4, 0, 0, 10]]
+
+board_choice = input("Choose a level from 1-4:\n")
+if(board_choice=="1"):
+    initial_board=initial_board1
+elif(board_choice=="2"):
+    initial_board=initial_board2
+elif(board_choice=="3"):
+    initial_board=initial_board3
+elif(board_choice=="4"):
+    initial_board=initial_board4
+else:
+    print("invalid board choice!!!\n")
 
 game = KlotskiState(initial_board)
 
@@ -248,12 +276,11 @@ if(option=="1"):
     print("\nCongratulations, you solved the puzzle!\n")
 
 elif(option=="2"):
-    goal_state = [
-                [2, 6, 7, 3],
-                [14, 4, 5, 3],
-                [10, 0, 0, 11],
-                [12, 1, 1, 13], 
-                [8, 1, 1, 9]]
+    goal_state = [[2, 7, 7, 8],
+                 [2, 5, 6, 8],
+                 [3, 0, 0, 9],
+                 [3, 1, 1, 9], 
+                 [4, 1, 1, 10]]
     
     game_final = KlotskiState(goal_state)
     solution = a_star_solve(game, game_final)
@@ -298,6 +325,6 @@ elif(option=="4"):
         f.write("Number of moves: " + str(len(solution)-1) + "\n")
         f.write("Memory used: " + str(memory_used) + " MB\n")
         f.write("Time spent: " +  str(time.process_time()) + " seconds\n")
-else: f.write("Invalid Input")
+else: print("Invalid Input")
 
 f.close()
