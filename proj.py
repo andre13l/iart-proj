@@ -45,8 +45,6 @@ class KlotskiState:
             
     def manhattan_distance(self, goal_state):
         distance = 0
-        # Flatten the self.board and goal_state.board temporarily
-        flat_board = [val for sublist in self.board for val in sublist]
         flat_goal_board = [val for sublist in goal_state.board for val in sublist]
         for i in range(len(self.board)):
             for j in range(len(self.board[0])):
@@ -156,14 +154,15 @@ def a_star_search(start_state, goal_state, objective_test, successors, heuristic
 
     print("No solution found!!")
     return None
-
 def a_star_solve(start_state, goal_state):
     return a_star_search(start_state, goal_state, KlotskiState.is_solved, successors, KlotskiState.manhattan_distance)
 def bfs(start_state, objective_test, successors):
     frontier = []
     heapq.heappush(frontier, start_state)
     explored = set()
-    #print_board(start_state.board)
+    
+    start_state.depth = 0
+    
     while frontier:
         state = heapq.heappop(frontier)
         
@@ -177,42 +176,46 @@ def bfs(start_state, objective_test, successors):
             if successor not in explored:
                 heapq.heappush(frontier, successor) 
 
-    print("No solution found!!")
+    print("No solution found!!") 
     return None
     
 
 def bfs_solve(start_state):
     return bfs(start_state, KlotskiState.is_solved, successors)
 
-def dfs(start_state, objective_test, successors):
-    frontier = []
-    frontier.append(start_state)
+def dfs(start_state, objective_test, successors, depth_limit):
+    frontier = [(start_state, 0)]
     explored = set()
-    #print_board(start_state.board)
+
     while frontier:
-        state = frontier.pop()
-        
+        state, depth = frontier.pop()
+
+        if depth > depth_limit:
+            continue
+
         if objective_test(state):
-            print("\nPuzzle Solved!\n")
             return state.move_history
         
         explored.add(state)
         
-        for (successor,_) in successors(state)[::-1]:
-            if successor not in explored:
-                frontier.append(successor) 
+        successors_list = list(successors(state))
+        successors_list.reverse()
 
-    print("No solution found!!")
+        for (successor, _) in successors_list:
+            if successor not in explored:
+                frontier.append((successor, depth + 1))
+
     return None
 
+
 def dfs_solve(start_state):
-    return dfs(start_state, KlotskiState.is_solved,successors)
+    return dfs(start_state, KlotskiState.is_solved,successors, 400)
 # Create the game object
 initial_board = [[4, 9, 8, 5],
-                 [6, 1, 1, 7],
-                 [2, 1, 1, 3],
-                 [14, 10, 11, 3], 
-                 [12, 0, 0, 13]]
+                 [6, 11, 10, 7],
+                 [1, 1, 12, 3],
+                 [1, 1, 0, 3], 
+                 [14, 2, 0, 13]]
 
 game = KlotskiState(initial_board)
 
@@ -265,7 +268,7 @@ elif(option=="2"):
         print("Time spent:", time.process_time(), "seconds")
 
 elif(option=="3"):
-   
+
     solution = bfs_solve(game)
     if(solution!=None):
         memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
