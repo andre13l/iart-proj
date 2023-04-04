@@ -221,12 +221,17 @@ initial_board2 = [[4, 9, 8, 5],
                  [2, 1, 1, 3],
                  [12, 1, 1, 3], 
                  [14, 0, 0, 13]]
-initial_board3 = [[4, 9, 8, 5],
+initial_board3 = [[4, 1, 1, 5],
+                 [6, 1, 1, 7],
+                 [2, 8, 9, 3],
+                 [2, 10, 11, 3], 
+                 [12, 0, 0, 13]]
+initial_board4 = [[4, 9, 8, 5],
                  [6, 11, 10, 7],
                  [1, 1, 12, 3],
                  [1, 1, 0, 3], 
                  [14, 2, 0, 13]]
-initial_board4 = [[2, 7, 7, 8],
+initial_board5 = [[2, 7, 7, 8],
                  [2, 1, 1, 8],
                  [3, 1, 1, 9],
                  [3, 5, 6, 9], 
@@ -241,7 +246,8 @@ print("\t(1) Nivel 1\n")
 print("\t(2) Nivel 2\n")
 print("\t(3) Nivel 3\n")
 print("\t(4) Nivel 4\n\n")
-print("\t(5) Sair\n\n")
+print("\t(4) Nivel 5\n\n")
+print("\t(Q) Sair\n\n")
 
 board_choice = input()
 if(board_choice=="1"):
@@ -260,19 +266,26 @@ elif(board_choice=="2"):
                  [14, 1, 1, 13]]   
 elif(board_choice=="3"):
     initial_board=initial_board3
-    goal_state=[[4, 9, 8, 5],
+    goal_state=[[2, 6, 7, 3],
+                 [2, 4, 5, 3],
+                 [10, 0, 0, 11],
+                 [12, 1, 1, 13], 
+                 [8, 1, 1, 9]]
+elif(board_choice=="4"):
+    initial_board=initial_board4  
+    goal_state = [[4, 9, 8, 5],
                  [6, 11, 10, 7],
                  [14, 0, 0, 3],
                  [2, 1, 1, 3], 
                  [12, 1, 1, 13]]
-elif(board_choice=="4"):
-    initial_board=initial_board4  
+elif(board_choice=="5"):
+    initial_board=initial_board5  
     goal_state = [[3, 2, 9, 8],
                  [3, 2, 9, 8],
                  [7, 7, 4, 6],
                  [10, 1, 1, 0], 
-                 [5, 1, 1, 0]]
-elif(board_choice=="5"):
+                 [5, 1, 1, 0]]    
+elif(board_choice=="Q" or board_choice=="q"):
     exit()       
 else:
     print("invalid board choice!!!\n")
@@ -288,7 +301,7 @@ print("\t(1) Player Mode\n")
 print("\t(2) Computer Mode | A* search |\n")
 print("\t(3) Computer Mode | BFS search |\n")
 print("\t(4) Computer Mode | DFS search |\n\n")
-print("\t(5) Sair\n\n")
+print("\t(Q) Sair\n\n")
 # Processar a opção escolhida     
 option = input()
 
@@ -367,7 +380,7 @@ elif(option=="4"):
         f.write("Memory used: " + str(memory_used) + " MB\n")
         f.write("Time spent: " +  str(time.process_time()) + " seconds\n")
 
-elif(option==5): exit() 
+elif(board_choice=="Q" or board_choice=="q"): exit() 
 else: print("Invalid Input")
 
 f.close()
