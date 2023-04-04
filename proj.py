@@ -156,7 +156,7 @@ def a_star_search(start_state, goal_state, objective_test, successors, heuristic
     return None
 def a_star_solve(start_state, goal_state):
     return a_star_search(start_state, goal_state, KlotskiState.is_solved, successors, KlotskiState.manhattan_distance)
-def bfs(start_state, objective_test, successors):
+def bfs(start_state, objective_test, successors, depth_limit=None):
     frontier = []
     heapq.heappush(frontier, start_state)
     explored = set()
@@ -172,16 +172,18 @@ def bfs(start_state, objective_test, successors):
         
         explored.add(state)
         
-        for (successor,_) in successors(state):
-            if successor not in explored:
-                heapq.heappush(frontier, successor) 
+        if depth_limit is None or state.depth <= depth_limit:
+            for (successor, _) in successors(state):
+                successor.depth = state.depth + 1
+                if successor not in explored:
+                    heapq.heappush(frontier, successor) 
 
     print("No solution found!!") 
     return None
     
 
 def bfs_solve(start_state):
-    return bfs(start_state, KlotskiState.is_solved, successors)
+    return bfs(start_state, KlotskiState.is_solved, successors, 13)
 
 def dfs(start_state, objective_test, successors, depth_limit):
     frontier = [(start_state, 0)]
@@ -209,7 +211,7 @@ def dfs(start_state, objective_test, successors, depth_limit):
 
 
 def dfs_solve(start_state):
-    return dfs(start_state, KlotskiState.is_solved,successors, 400)
+    return dfs(start_state, KlotskiState.is_solved,successors, 20)
 # Create the game object
 initial_board = [[4, 9, 8, 5],
                  [6, 11, 10, 7],
