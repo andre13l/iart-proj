@@ -233,12 +233,32 @@ initial_board4 = [[2, 7, 7, 8],
 board_choice = input("Choose a level from 1-4:\n")
 if(board_choice=="1"):
     initial_board=initial_board1
+    goal_state = [[4, 9, 8, 5],
+                 [6, 11, 10, 7],
+                 [2, 0, 12, 3],
+                 [0, 1, 1, 3], 
+                 [14, 1, 1, 13]]
 elif(board_choice=="2"):
     initial_board=initial_board2
+    goal_state = [[4, 9, 8, 5],
+                 [6, 11, 10, 7],
+                 [2, 0, 0, 3],
+                 [12, 1, 1, 3], 
+                 [14, 1, 1, 13]]   
 elif(board_choice=="3"):
     initial_board=initial_board3
+    goal_state=[[4, 9, 8, 5],
+                 [6, 11, 10, 7],
+                 [14, 0, 0, 3],
+                 [2, 1, 1, 3], 
+                 [12, 1, 1, 13]]
 elif(board_choice=="4"):
-    initial_board=initial_board4
+    initial_board=initial_board4  
+    goal_state = [[3, 2, 9, 8],
+                 [3, 2, 9, 8],
+                 [7, 7, 4, 6],
+                 [10, 1, 1, 0], 
+                 [5, 1, 1, 0]]
 else:
     print("invalid board choice!!!\n")
 
@@ -276,11 +296,6 @@ if(option=="1"):
     print("\nCongratulations, you solved the puzzle!\n")
 
 elif(option=="2"):
-    goal_state = [[2, 7, 7, 8],
-                 [2, 5, 6, 8],
-                 [3, 0, 0, 9],
-                 [3, 1, 1, 9], 
-                 [4, 1, 1, 10]]
     
     game_final = KlotskiState(goal_state)
     solution = a_star_solve(game, game_final)
