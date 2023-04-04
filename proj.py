@@ -59,7 +59,8 @@ class KlotskiState:
                     #print(distance)
         return distance
     
-    
+f = open("output.txt", "w")
+
 # Define function to check if the move is valid
 def is_valid_move(board, piece_positions, direction):
     row, col = piece_positions[0]
@@ -115,13 +116,6 @@ def print_board(board):
             print(board[i][j], end=" ", flush=True)
         print(flush=True)
 
-def print_sequence(sequence):
-    # prints the sequence of states
-    for state in sequence:
-        for row in state:
-            print(row)
-        print()
-
 def successors(state):
 
     for i in range(len(state.board)):
@@ -142,7 +136,7 @@ def a_star_search(start_state, goal_state, objective_test, successors, heuristic
         (cost, state) = heapq.heappop(frontier)
         
         if objective_test(state):
-            print("\nPuzzle Solved!\n")
+            f.write("\nPuzzle Solved!\n")
             return state.move_history
         
         explored.add(state)
@@ -152,8 +146,9 @@ def a_star_search(start_state, goal_state, objective_test, successors, heuristic
                 new_cost = cost - heuristic(state, goal_state) + action_cost + heuristic(successor, goal_state)
                 heapq.heappush(frontier, (new_cost, successor)) 
 
-    print("No solution found!!")
+    f.write("No solution found!!")
     return None
+
 def a_star_solve(start_state, goal_state):
     return a_star_search(start_state, goal_state, KlotskiState.is_solved, successors, KlotskiState.manhattan_distance)
 def bfs(start_state, objective_test, successors, depth_limit=None):
@@ -167,7 +162,7 @@ def bfs(start_state, objective_test, successors, depth_limit=None):
         state = heapq.heappop(frontier)
         
         if objective_test(state):
-            print("\nPuzzle Solved!\n")
+            f.write("\nPuzzle Solved!\n")
             return state.move_history
         
         explored.add(state)
@@ -178,7 +173,7 @@ def bfs(start_state, objective_test, successors, depth_limit=None):
                 if successor not in explored:
                     heapq.heappush(frontier, successor) 
 
-    print("No solution found!!") 
+    f.write("No solution found!!") 
     return None
     
 
@@ -264,28 +259,45 @@ elif(option=="2"):
     solution = a_star_solve(game, game_final)
     if(solution!=None):
         memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
-        print_sequence(solution)
-        print("Number of moves", len(solution)-1)
-        print("Memory used:", memory_used, "MB")
-        print("Time spent:", time.process_time(), "seconds")
+        for state in solution:
+            for row in state:
+                f.write(str(row))
+                f.write("\n")
+            f.write("\n")
+        
+        f.write("Number of moves: " + str(len(solution)-1) + "\n")
+        f.write("Memory used: " + str(memory_used) + " MB\n")
+        f.write("Time spent: " +  str(time.process_time()) + " seconds\n")
 
 elif(option=="3"):
 
     solution = bfs_solve(game)
     if(solution!=None):
         memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
-        print_sequence(solution)
-        print("Number of moves", len(solution)-1)
-        print("Memory used:", memory_used, "MB")
-        print("Time spent:", time.process_time(), "seconds")
+        for state in solution:
+            for row in state:
+                f.write(str(row))
+                f.write("\n")
+            f.write("\n")
+        
+        f.write("Number of moves: " + str(len(solution)-1) + "\n")
+        f.write("Memory used: " + str(memory_used) + " MB\n")
+        f.write("Time spent: " +  str(time.process_time()) + " seconds\n")
 
 elif(option=="4"):
    
     solution = dfs_solve(game)
     if(solution!=None):
         memory_used = psutil.Process().memory_info().rss / 1024 / 1024  # in MB
-        print_sequence(solution)
-        print("Number of moves", len(solution)-1)
-        print("Memory used:", memory_used, "MB")
-        print("Time spent:", time.process_time(), "seconds")
-else: print("Invalid Input")
+        for state in solution:
+            for row in state:
+                f.write(str(row))
+                f.write("\n")
+            f.write("\n")
+        
+        f.write("Number of moves: " + str(len(solution)-1) + "\n")
+        f.write("Memory used: " + str(memory_used) + " MB\n")
+        f.write("Time spent: " +  str(time.process_time()) + " seconds\n")
+else: f.write("Invalid Input")
+
+f.close()
