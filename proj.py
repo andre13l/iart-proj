@@ -177,7 +177,7 @@ def bfs(start_state, objective_test, successors, depth_limit=None):
     
 
 def bfs_solve(start_state):
-    return bfs(start_state, KlotskiState.is_solved, successors, 200)
+    return bfs(start_state, KlotskiState.is_solved, successors, 13)
 
 def dfs(start_state, objective_test, successors, depth_limit):
     frontier = [(start_state, 0)]
@@ -207,7 +207,7 @@ def dfs(start_state, objective_test, successors, depth_limit):
 
 
 def dfs_solve(start_state):
-    return dfs(start_state, KlotskiState.is_solved,successors, 200)
+    return dfs(start_state, KlotskiState.is_solved,successors, 20)
 # Create the game object
 initial_board1 = [[4, 9, 8, 5],
                  [6, 11, 10, 7],
